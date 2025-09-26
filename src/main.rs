@@ -1,36 +1,40 @@
 use std::io::{stdin, stdout, Write};
-use todo::Task;
+use todo::{load_tasks, run, Task};
 
-fn run_prompt(todo: &mut Vec<Task>) {
+fn run_prompt(todo_list: &mut Vec<Task>) {
     loop {
-        let mut stdout = stdout().lock();
-        print!("(PCodes-List) > ");
+        let mut stdout = stdout();
+        print!("(PCodes-TODO) > ");
         stdout.flush().expect("Could not flush stdout");
 
         let mut buffer = String::new();
         stdin().read_line(&mut buffer).expect("Could not read line");
 
-        //Take the args into the run function of lib and get the result of the computation out.
-        let command: &str = buffer.split_whitespace().collect::<Vec<&str>>()[0];
-        let task_string = concatenate_task_string(buffer.split_whitespace().collect());
-        let args = vec![command, task_string.as_str()];
-        todo::run(args, todo);
-    }
-}
+        let buffer = buffer.trim();
+        if buffer.is_empty() {
+            continue;
+        }
 
-fn concatenate_task_string(word_vec: Vec<&str>) -> String {
-    let mut result = String::new();
-    // We are assuming that everything after the first word is part of task string.
-    for i in 1..word_vec.len() {
-        result = result + word_vec[i];
-        result = result + " ";
+        // Split input into words
+        let words: Vec<&str> = buffer.split_whitespace().collect();
+        println!("{:?}", words);
+        let command = words[0].to_string();
+        println!("{:?}", command);
+
+        // Everything after the first word is treated as a single argument (multi-word task)
+        let task_string = if words.len() > 1 {
+            words[1..].join(" ")
+        } else {
+            String::new()
+        };
+
+        let args = vec![command, task_string];
+        println!("{:?}", args);
+        run(args, todo_list);
     }
-    result
 }
 
 fn main() {
-    let mut todo: Vec<Task> = Vec::new();
-    run_prompt(&mut todo);
+    let mut todo_list = load_tasks().unwrap_or_default();
+    run_prompt(&mut todo_list);
 }
-
-
